@@ -1,0 +1,619 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cosmic Image Enhancer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;700&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --space-black: #0B0D17;
+            --nebula-blue: #4A6FA5;
+            --star-white: #E6E6EA;
+            --galaxy-purple: #6B46C1;
+            --pulsar-red: #FF3860;
+            --comet-tail: rgba(255, 255, 255, 0.1);
+            --vh: 1vh;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            color: var(--star-white);
+            min-height: 100vh;
+            min-height: calc(var(--vh, 1vh) * 100);
+            overflow-x: hidden;
+            background: var(--space-black);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .cosmic-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: calc(var(--vh, 1vh) * 100);
+            z-index: -2;
+            background:
+                radial-gradient(circle at 50% 50%,
+                    rgba(74, 111, 165, 0.1) 0%,
+                    rgba(11, 13, 23, 0.8) 100%),
+                linear-gradient(45deg,
+                    var(--space-black) 0%,
+                    #1A1A2E 50%,
+                    var(--space-black) 100%);
+            animation: rotate 240s linear infinite;
+        }
+
+        .constellation-net {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 1px, transparent 2px);
+            background-size: 40px 40px;
+            animation: moveConstellation 300s linear infinite;
+            pointer-events: none;
+        }
+
+        .floating-debris {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+        }
+
+        .planetary-ring {
+            position: fixed;
+            border: 2px solid rgba(74, 111, 165, 0.2);
+            border-radius: 50%;
+            animation: rotate linear infinite;
+        }
+
+        .planet {
+            position: fixed;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes moveConstellation {
+            from { transform: translate(-50%, -50%); }
+            to { transform: translate(0%, 0%); }
+        }
+
+        .cosmic-container {
+            max-width: 1200px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .stellar-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+            padding-top: 2rem;
+        }
+
+        .stellar-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            background: linear-gradient(to right, var(--nebula-blue), var(--galaxy-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .nebula-form {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(74, 111, 165, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-label {
+            display: block;
+            margin-bottom: 1.5rem;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .custom-upload {
+            position: relative;
+            padding: 1.5rem 2rem;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+            min-height: 120px;
+        }
+
+        .custom-upload::before {
+            content: '';
+            position: absolute;
+            top: -150%;
+            left: -150%;
+            width: 300%;
+            height: 300%;
+            background: conic-gradient(
+                var(--nebula-blue),
+                var(--galaxy-purple),
+                var(--pulsar-red),
+                var(--galaxy-purple),
+                var(--nebula-blue)
+            );
+            animation: rotate 4s linear infinite;
+        }
+
+        .custom-upload::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: rgba(11, 13, 23, 0.95);
+            border-radius: 8px;
+        }
+
+        .processing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 13, 23, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .pulsar-loader {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, var(--pulsar-red), var(--space-black));
+            animation: pulsate 1.5s ease-in-out infinite;
+            position: relative;
+        }
+
+        @keyframes pulsate {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        .cosmic-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s ease;
+            width: 100%;
+        }
+
+        .cosmic-comparison.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .image-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            transition: transform 0.3s ease;
+            aspect-ratio: 1/1;
+        }
+
+        .image-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 15px;
+            border: 2px solid transparent;
+            animation: borderPulse 3s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes borderPulse {
+            0% { border-color: var(--nebula-blue); filter: drop-shadow(0 0 5px var(--nebula-blue)); }
+            50% { border-color: var(--galaxy-purple); filter: drop-shadow(0 0 15px var(--galaxy-purple)); }
+            100% { border-color: var(--nebula-blue); filter: drop-shadow(0 0 5px var(--nebula-blue)); }
+        }
+
+        .image-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: var(--space-black);
+            transition: filter 0.3s ease;
+        }
+
+        .card-footer {
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .download-btn {
+            background: var(--nebula-blue);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meteor-shower {
+            position: fixed;
+            top: -50px;
+            right: -50px;
+            width: 300px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--star-white));
+            transform: rotate(-45deg);
+            filter: drop-shadow(0 0 5px white);
+            animation: meteor 3s linear infinite;
+        }
+
+        @keyframes meteor {
+            0% { transform: rotate(-45deg) translateX(0); opacity: 1; }
+            90% { transform: rotate(-45deg) translateX(100vw); opacity: 1; }
+            100% { transform: rotate(-45deg) translateX(100vw); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .cosmic-container {
+                padding: 1rem;
+                width: 95%;
+            }
+
+            .nebula-form {
+                padding: 1rem;
+            }
+
+            .custom-upload {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+                min-height: 100px;
+            }
+
+            .cosmic-comparison {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .stellar-header {
+                margin-bottom: 1.5rem;
+                padding-top: 1rem;
+            }
+
+            .card-footer {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stellar-header h1 {
+                font-size: 1.75rem;
+            }
+
+            .download-btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.9rem;
+                width: 100%;
+            }
+
+            .image-card {
+                aspect-ratio: 4/3;
+            }
+        }
+
+        .planet {
+            position: fixed;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="cosmic-bg"></div>
+    <div class="constellation-net"></div>
+    <div class="floating-debris"></div>
+
+    <div class="planetary-ring" style="width: 150vw; height: 150vw; top: -25vh; left: -25vw; animation-duration: 400s;"></div>
+    <div class="planetary-ring" style="width: 120vw; height: 120vw; top: -10vh; left: -10vw; animation-duration: 300s;"></div>
+
+    <div class="cosmic-container">
+        <div class="meteor-shower" style="animation-delay: -1s"></div>
+        <div class="meteor-shower" style="right: -200px; animation-delay: -2.5s"></div>
+
+        <header class="stellar-header">
+            <h1>Interstellar Image Refiner</h1>
+            <p>Revealing the Universe's Hidden Beauty</p>
+        </header>
+
+        <div class="nebula-form">
+            <form method="post" enctype="multipart/form-data" id="enhanceForm">
+                {% csrf_token %}
+                <label class="upload-label">
+                    <span class="custom-upload">
+                        <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" style="fill: currentColor;">
+                            <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+                        </svg>
+                        <span>Select Cosmic Image</span>
+                    </span>
+                    {{ form.image }}
+                </label>
+                <button type="submit" class="download-btn">
+                    Begin Enhancement
+                </button>
+            </form>
+        </div>
+
+        <div class="processing-overlay" id="processingOverlay">
+            <div class="pulsar-loader"></div>
+            <div class="fact-stream" id="factStream"></div>
+        </div>
+
+        {% if messages %}
+        <div class="stellar-messages">
+            {% for message in messages %}
+            <div class="message-alert message-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if original and enhanced %}
+        <div class="cosmic-comparison visible">
+            <div class="image-card">
+                <img src="{{ original }}" alt="Original Cosmic View">
+                <div class="card-footer">
+                    <span>{{ original_width }}x{{ original_height }}</span>
+                    <a href="{{ original }}" download class="download-btn">
+                        Download Original
+                    </a>
+                </div>
+            </div>
+
+            <div class="image-card">
+                <img src="{{ enhanced }}" alt="Enhanced Cosmic Vision">
+                <div class="card-footer">
+                    <span>{{ enhanced_width }}x{{ enhanced_height }}</span>
+                    <a href="{{ enhanced }}" download class="download-btn">
+                        Download Enhanced
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if analysis %}
+        <div class="cosmic-analysis">
+            <div class="analysis-header">
+                <h2>AI Astronomical Analysis</h2>
+                <div class="pulsar-line">
+                </div>
+            <div class="analysis-content">
+                {{ analysis|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function handleResize() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+
+        function createFloatingDebris() {
+            const debrisContainer = document.querySelector('.floating-debris');
+            for(let i = 0; i < 50; i++) {
+                const debris = document.createElement('div');
+                debris.className = 'debris';
+                debris.style.width = Math.random() * 4 + 'px';
+                debris.style.height = debris.style.width;
+                debris.style.left = Math.random() * 100 + '%';
+                debris.style.animationDuration = 30 + Math.random() * 30 + 's';
+                debris.style.animationDelay = Math.random() * -30 + 's';
+                debrisContainer.appendChild(debris);
+            }
+        }
+
+        function createParticles(x, y) {
+            for(let i = 0; i < 10; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.width = Math.random() * 3 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        function createShootingStars() {
+            setInterval(() => {
+                const star = document.createElement('div');
+                star.className = 'shooting-star';
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.width = `${Math.random() * 100 + 50}px`;
+                star.style.animation = `shootingStar ${Math.random() * 2 + 1}s linear`;
+                document.body.appendChild(star);
+                setTimeout(() => star.remove(), 2000);
+            }, 1000);
+        }
+
+        function createStarfield() {
+            const container = document.createElement('div');
+            container.style.position = 'fixed';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.pointerEvents = 'none';
+            container.style.zIndex = '-1';
+
+            for (let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.width = Math.random() * 3 + 'px';
+                star.style.height = star.style.width;
+                star.style.backgroundColor = 'white';
+                star.style.borderRadius = '50%';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.opacity = Math.random();
+                star.style.animation = `twinkle ${2 + Math.random() * 3}s infinite`;
+                container.appendChild(star);
+            }
+            document.body.appendChild(container);
+        }
+
+        function createPlanets() {
+            const planetData = [
+                { size: 50, color: '#a8dadc', speed: 40, top: '15%', left: '10%' },
+                { size: 80, color: '#457b9d', speed: 60, top: '40%', left: '70%' },
+                { size: 60, color: '#1d3557', speed: 50, top: '75%', left: '25%' },
+                { size: 40, color: '#f1faee', speed: 70, top: '20%', left: '85%' },
+            ];
+
+            planetData.forEach((planetInfo, index) => {
+                const planet = document.createElement('div');
+                planet.className = 'planet';
+                planet.style.width = planetInfo.size + 'px';
+                planet.style.height = planetInfo.size + 'px';
+                planet.style.backgroundColor = planetInfo.color;
+                planet.style.top = planetInfo.top;
+                planet.style.left = planetInfo.left;
+                planet.style.zIndex = -1;
+                const orbitRadius = Math.random() * 200 + 300;
+                const orbitSpeed = 0.02 + Math.random() * 0.05;
+                const startAngle = Math.random() * 360;
+
+                function animatePlanet() {
+                    const angle = (Date.now() / (planetInfo.speed * 100) + startAngle) * orbitSpeed;
+                    const centerX = window.innerWidth / 2;
+                    const centerY = window.innerHeight / 2;
+                    const x = centerX + orbitRadius * Math.cos(angle) - planetInfo.size / 2;
+                    const y = centerY + orbitRadius * Math.sin(angle) - planetInfo.size / 2;
+                    planet.style.left = `${x}px`;
+                    planet.style.top = `${y}px`;
+                    requestAnimationFrame(animatePlanet);
+                }
+
+                document.body.appendChild(planet);
+                animatePlanet();
+            });
+        }
+
+        document.getElementById('enhanceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const overlay = document.getElementById('processingOverlay');
+            const facts = [
+                "Enhancing cosmic resolution...",
+                "Analyzing star patterns...",
+                "Calibrating spectral sensors...",
+                "Removing interstellar noise...",
+                "Optimizing nebula contrast...",
+                "Mapping dark matter interference..."
+            ];
+
+            let currentFact = 0;
+            overlay.style.display = 'flex';
+
+            const factInterval = setInterval(() => {
+                document.getElementById('factStream').textContent = facts[currentFact];
+                currentFact = (currentFact + 1) % facts.length;
+            }, 3000);
+
+            // Submit form after animation setup
+            setTimeout(() => this.submit(), 100);
+
+            window.addEventListener('beforeunload', () => {
+                clearInterval(factInterval);
+            });
+        });
+
+        document.querySelector('.custom-upload').addEventListener('mouseover', (e) => {
+            const rect = e.target.getBoundingClientRect();
+            createParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+        });
+
+        function initCosmicAnimations() {
+            createStarfield();
+            createShootingStars();
+            createFloatingDebris();
+            createPlanets();
+
+            setInterval(() => {
+                const symbols = ['✦', '✧', '★', '☆', '✶', '❂'];
+                const constellation = document.createElement('div');
+                constellation.style.position = 'fixed';
+                constellation.style.left = Math.random() * 100 + '%';
+                constellation.style.top = Math.random() * 100 + '%';
+                constellation.style.opacity = '0.3';
+                constellation.style.animation = `float ${20 + Math.random() * 20}s infinite`;
+                constellation.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                document.body.appendChild(constellation);
+                setTimeout(() => constellation.remove(), 20000);
+            }, 1000);
+        }
+
+        // Initialize viewport height and animations
+        window.addEventListener('resize', handleResize);
+        handleResize();
+        window.addEventListener('load', initCosmicAnimations);
+    </script>
+</body>
+</html>
