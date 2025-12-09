@@ -108,9 +108,7 @@ python manage.py runserver
 ## 🧑‍💻 Developer
 
 **Anup Kumar Singh**
-AI | ML | Python | Computer Vision
-Email: *your-email*
-LinkedIn: *(optional)*
+
 
 ---
 
